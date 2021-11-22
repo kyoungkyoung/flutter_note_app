@@ -1,27 +1,85 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_note_app/data/data_source/local/note_data_source.dart';
+import 'package:flutter_note_app/data/repository/note_repository_impl.dart';
+import 'package:flutter_note_app/domain/repository/note_repository.dart';
+import 'package:flutter_note_app/domain/use_case/add_note_use_case.dart';
+import 'package:flutter_note_app/domain/use_case/delete_note_use_case.dart';
+import 'package:flutter_note_app/domain/use_case/get_note_use_case.dart';
+import 'package:flutter_note_app/domain/use_case/get_notes_use_case.dart';
+import 'package:flutter_note_app/domain/use_case/note_use_cases.dart';
+import 'package:flutter_note_app/presentation/add_edit_note/add_edit_note_view_model.dart';
+import 'package:flutter_note_app/presentation/notes/notes_view_model.dart';
+import 'package:provider/provider.dart';
+import 'package:provider/single_child_widget.dart';
+import 'package:sqflite/sqflite.dart';
 
-void main() {
-  runApp(const MyApp());
+import 'domain/use_case/update_note_use_case.dart';
+
+void main() async {
+  // 플랫폼 채널의 위젯 바인딩을 보장
+  WidgetsFlutterBinding.ensureInitialized();
+
+  final db = await openDatabase(
+    'notes.db',
+    version: 1,
+    onCreate: (db, version) async {
+      await db.execute(
+          'create table note(id integer primary key autoincrement, title text, content text, color integer, timestamp integer)');
+    },
+  );
+
+  // 다른 클래스에 의존하지 않는 Model
+  List<SingleChildWidget> independentModels = [
+    Provider<NoteDataSource>(
+      create: (context) => NoteDataSource(db),
+    ),
+  ];
+
+  // independentModels에 등록한 클래스에 의존하는 Model
+  List<SingleChildWidget> dependentModels = [
+    ProxyProvider<NoteDataSource, NoteRepository>(
+      update: (context, noteDataSource, _) =>
+          NoteRepositoryImpl(noteDataSource),
+    ),
+    ProxyProvider<NoteRepository, NoteUseCases>(
+        update: (context, noteRepository, _) => NoteUseCases(
+            addNoteUseCase: AddNoteUseCase(noteRepository),
+            updateNoteUseCase: UpdateNoteUseCase(noteRepository),
+            deleteNoteUseCase: DeleteNoteUseCase(noteRepository),
+            getNoteUseCase: GetNoteUseCase(noteRepository),
+            getNotesUseCase: GetNotesUseCase(noteRepository)))
+  ];
+
+  // view가 사용, independentModels와 dependentModels에 등록한 클래스들을 사용할 수 있음
+  List<SingleChildWidget> viewModels = [
+    ChangeNotifierProvider<NotesViewModel>(
+      create: (context) => NotesViewModel(context.read<NoteUseCases>()),
+    ),
+    ChangeNotifierProvider<AddEditNoteViewModel>(
+      create: (context) => AddEditNoteViewModel(context.read<NoteUseCases>()),
+    ),
+  ];
+
+  List<SingleChildWidget> globalProvideers = [
+    ...independentModels,
+    ...dependentModels,
+    ...viewModels,
+  ];
+
+  runApp(MultiProvider(
+    providers: globalProvideers,
+    child: const MyApp(),
+  ));
 }
 
 class MyApp extends StatelessWidget {
   const MyApp({Key? key}) : super(key: key);
 
-  // This widget is the root of your application.
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
       title: 'Flutter Demo',
       theme: ThemeData(
-        // This is the theme of your application.
-        //
-        // Try running your application with "flutter run". You'll see the
-        // application has a blue toolbar. Then, without quitting the app, try
-        // changing the primarySwatch below to Colors.green and then invoke
-        // "hot reload" (press "r" in the console where you ran "flutter run",
-        // or simply save your changes to "hot reload" in a Flutter IDE).
-        // Notice that the counter didn't reset back to zero; the application
-        // is not restarted.
         primarySwatch: Colors.blue,
       ),
       home: const MyHomePage(title: 'Flutter Demo Home Page'),
