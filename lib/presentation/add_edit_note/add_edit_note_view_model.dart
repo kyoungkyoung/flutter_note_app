@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:flutter/cupertino.dart';
+import 'package:flutter/material.dart';
 import 'package:flutter_note_app/domain/model/note.dart';
 import 'package:flutter_note_app/domain/use_case/note_use_cases.dart';
 import 'package:flutter_note_app/presentation/add_edit_note/add_edit_note_event.dart';
@@ -13,6 +14,11 @@ class AddEditNoteViewModel with ChangeNotifier {
   AddEditNoteViewModel(this.useCases);
 
   int _color = roseBud.value;
+  int get color => _color;
+
+  Color _outline = Colors.transparent;
+  Color get outline => _outline;
+
 
   final _eventController = StreamController<AddEditNoteUiEvent>();
   Stream<AddEditNoteUiEvent> get eventStream => _eventController.stream;
@@ -52,6 +58,7 @@ class AddEditNoteViewModel with ChangeNotifier {
   }
 
   void _changeColor(int color) {
+    _outline = Colors.white;
     _color = color;
     notifyListeners();
   }
