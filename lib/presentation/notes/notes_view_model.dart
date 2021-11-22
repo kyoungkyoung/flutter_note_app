@@ -1,8 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_note_app/core/data_case.dart';
 import 'package:flutter_note_app/domain/model/note.dart';
-import 'package:flutter_note_app/domain/use_case/delete_note_use_case.dart';
-import 'package:flutter_note_app/domain/use_case/get_notes_use_case.dart';
 import 'package:flutter_note_app/domain/use_case/note_use_cases.dart';
 import 'package:flutter_note_app/presentation/notes/notes_event.dart';
 import 'package:flutter_note_app/presentation/notes/notes_state.dart';
@@ -14,11 +12,14 @@ class NotesViewModel with ChangeNotifier {
 
   NotesState get state => _state;
 
-  NotesViewModel(this.noteUseCases);
+  Note? recentlyDeletedNote;
+
+  NotesViewModel(this.noteUseCases) {
+    _loadNotes();
+  }
 
   void onEvent(NotesEvent event) {
     event.when(
-      loadNotes: _loadNotes,
       deleteNote: _deleteNote,
       restoreNote: _restoreNote,
     );
@@ -35,9 +36,16 @@ class NotesViewModel with ChangeNotifier {
 
   void _deleteNote(Note note) async {
     await noteUseCases.deleteNoteUseCase.call(note);
+    recentlyDeletedNote = note;
+
+    _loadNotes();
   }
 
   void _restoreNote() async {
-
+    if(recentlyDeletedNote != null){
+      await noteUseCases.addNoteUseCase(recentlyDeletedNote!);
+      recentlyDeletedNote = null;
+    }
+    _loadNotes();
   }
 }
