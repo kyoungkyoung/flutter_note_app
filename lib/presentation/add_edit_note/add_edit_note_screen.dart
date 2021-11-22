@@ -9,11 +9,9 @@ import 'package:http/http.dart';
 import 'package:provider/provider.dart';
 
 class AddEditNoteScreen extends StatefulWidget {
-  // Note? note;
+  Note? note;
 
-  const AddEditNoteScreen({
-    Key? key,
-  }) : super(key: key);
+  AddEditNoteScreen({Key? key, this.note}) : super(key: key);
 
   @override
   State<AddEditNoteScreen> createState() => _AddEditNoteScreenState();
@@ -41,13 +39,13 @@ class _AddEditNoteScreenState extends State<AddEditNoteScreen> {
 
       // stream 구독
       _streamSubscription = viewModel.eventStream.listen((event) {
-        event.when(
-            saveNote: () {},
-            showSnackBar: (message) {
-              ScaffoldMessenger.of(context).showSnackBar(
-                SnackBar(content: Text(message)),
-              );
-            });
+        event.when(saveNote: () {
+          Navigator.pop(context);
+        }, showSnackBar: (message) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text(message)),
+          );
+        });
       });
     });
   }
@@ -135,7 +133,7 @@ class _AddEditNoteScreenState extends State<AddEditNoteScreen> {
           viewModel.onEvent(
             AddEditNoteEvent.saveNote(
               // widget.note?.id,
-              null,
+              widget.note?.id,
               _titleController.text,
               _contentController.text,
             ),
