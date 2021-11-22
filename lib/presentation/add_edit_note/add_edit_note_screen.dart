@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_note_app/domain/model/note.dart';
 import 'package:flutter_note_app/presentation/add_edit_note/add_edit_note_event.dart';
@@ -20,6 +22,7 @@ class AddEditNoteScreen extends StatefulWidget {
 class _AddEditNoteScreenState extends State<AddEditNoteScreen> {
   final TextEditingController _titleController = TextEditingController();
   final TextEditingController _contentController = TextEditingController();
+  StreamSubscription? _streamSubscription;
 
   final _colors = [
     roseBud.value,
@@ -35,7 +38,9 @@ class _AddEditNoteScreenState extends State<AddEditNoteScreen> {
 
     Future.microtask(() {
       final viewModel = context.read<AddEditNoteViewModel>();
-      viewModel.eventStream.listen((event) {
+
+      // stream 구독
+      _streamSubscription = viewModel.eventStream.listen((event) {
         event.when(
             saveNote: () {},
             showSnackBar: (message) {
@@ -49,6 +54,7 @@ class _AddEditNoteScreenState extends State<AddEditNoteScreen> {
 
   @override
   void dispose() {
+    _streamSubscription?.cancel();
     _titleController.dispose();
     _contentController.dispose();
     super.dispose();

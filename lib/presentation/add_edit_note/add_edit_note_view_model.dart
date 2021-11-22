@@ -19,8 +19,11 @@ class AddEditNoteViewModel with ChangeNotifier {
   Color _outline = Colors.transparent;
   Color get outline => _outline;
 
+  // 단일 구독 스트림 : 해당 스트림의 전체 수명동안 단일 수신기만 허용 ; 처음 구독이 취소된후 stream을 재청취하는것은 불가능
+  // final _eventController = StreamController<AddEditNoteUiEvent>();
 
-  final _eventController = StreamController<AddEditNoteUiEvent>();
+  // 브로드캐스트 스트림 : 여러 청취자를 허용
+  final _eventController = StreamController<AddEditNoteUiEvent>.broadcast();
   Stream<AddEditNoteUiEvent> get eventStream => _eventController.stream;
 
   void onEvent(AddEditNoteEvent event) {
