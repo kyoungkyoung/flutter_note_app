@@ -9,9 +9,9 @@ import 'package:http/http.dart';
 import 'package:provider/provider.dart';
 
 class AddEditNoteScreen extends StatefulWidget {
-  Note? note;
+  final Note? note;
 
-  AddEditNoteScreen({Key? key, this.note}) : super(key: key);
+  const AddEditNoteScreen({Key? key, this.note}) : super(key: key);
 
   @override
   State<AddEditNoteScreen> createState() => _AddEditNoteScreenState();
@@ -40,13 +40,19 @@ class _AddEditNoteScreenState extends State<AddEditNoteScreen> {
       // stream 구독
       _streamSubscription = viewModel.eventStream.listen((event) {
         event.when(saveNote: () {
-          Navigator.pop(context);
+          Navigator.pop(context, true);
         }, showSnackBar: (message) {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(content: Text(message)),
           );
         });
       });
+
+      if (widget.note != null) {
+        _titleController.text = widget.note!.title;
+        _contentController.text = widget.note!.content;
+        viewModel.onEvent(AddEditNoteEvent.changeColor(widget.note!.color));
+      }
     });
   }
 
