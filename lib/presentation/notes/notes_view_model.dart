@@ -28,7 +28,7 @@ class NotesViewModel with ChangeNotifier {
 
   void _loadNotes() async {
     // List<Note> notes = await getNotesUseCase.call(NoParams());
-    List<Note> notes = await _noteUseCases.getNotesUseCase(NoParams());
+    List<Note> notes = await _noteUseCases.getNotesUseCase(state.noteOrder);
     _state = state.copyWith(
       notes: notes,
     );
